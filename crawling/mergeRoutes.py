@@ -1,3 +1,4 @@
+from ast import Dict
 import json
 from sys import stderr
 from haversine import haversine, Unit
@@ -149,36 +150,37 @@ def smartUnique():
 
   return _routeList
       
-importRouteListJson('kmb')
-importRouteListJson('ctb')
-importRouteListJson('nlb')
-importRouteListJson('lrtfeeder')
-importRouteListJson('gmb')
-importRouteListJson('lightRail')
-importRouteListJson('mtr')
-importRouteListJson('sunferry')
-importRouteListJson('fortuneferry')
-importRouteListJson('hkkf')
-routeList = smartUnique()
-for route in routeList:
-  route['stops'] = {co: stops for co, stops in route['stops']}
-
-holidays = json.load(open('holiday.json', 'r', encoding='UTF-8'))
-serviceDayMap = json.load(open('gtfs.json', 'r', encoding='UTF-8'))['serviceDayMap']
-
-def standardizeDict(d):
+def standardizeDict(d: dict):
   return {key: value if not isinstance(value, dict) else standardizeDict(value) for key, value in sorted(d.items())}
 
-db = standardizeDict({
-  'routeList': {getRouteId(v): v for v in routeList},
-  'stopList': stopList,
-  'stopMap': stopMap,
-  'holidays': holidays,
-  'serviceDayMap': serviceDayMap,
-})
+if __name__ == '__main__':
+  importRouteListJson('kmb')
+  importRouteListJson('ctb')
+  importRouteListJson('nlb')
+  importRouteListJson('lrtfeeder')
+  importRouteListJson('gmb')
+  importRouteListJson('lightRail')
+  importRouteListJson('mtr')
+  importRouteListJson('sunferry')
+  importRouteListJson('fortuneferry')
+  importRouteListJson('hkkf')
+  routeList = smartUnique()
+  for route in routeList:
+    route['stops'] = {co: stops for co, stops in route['stops']}
 
-with open( 'routeFareList.json', 'w', encoding='UTF-8' ) as f:
-  f.write(json.dumps(db, ensure_ascii=False, indent=4))
+  holidays = json.load(open('holiday.json', 'r', encoding='UTF-8'))
+  serviceDayMap = json.load(open('gtfs.json', 'r', encoding='UTF-8'))['serviceDayMap']
 
-with open( 'routeFareList.min.json', 'w', encoding='UTF-8' ) as f:
-  f.write(json.dumps(db, ensure_ascii=False, separators=(',', ':')))
+  db = standardizeDict({
+    'routeList': {getRouteId(v): v for v in routeList},
+    'stopList': stopList,
+    'stopMap': stopMap,
+    'holidays': holidays,
+    'serviceDayMap': serviceDayMap,
+  })
+
+  with open( 'routeFareList.json', 'w', encoding='UTF-8' ) as f:
+    f.write(json.dumps(db, ensure_ascii=False, indent=4))
+
+  with open( 'routeFareList.min.json', 'w', encoding='UTF-8' ) as f:
+    f.write(json.dumps(db, ensure_ascii=False, separators=(',', ':')))
