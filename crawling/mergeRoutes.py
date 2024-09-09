@@ -1,5 +1,6 @@
 from ast import Dict
 import json
+import logging
 from sys import stderr
 from haversine import haversine, Unit
 
@@ -47,8 +48,8 @@ def importRouteListJson( co ):
             'lng': float(stop['long'])
           }
         }
-      except:
-        print("Problematic stop: ", stopId, file=stderr)
+      except Exception as e:
+        logger.exception(f"Problematic stop: {stopId}", exc_info=e)
   
   for _route in _routeList:
     found = False
@@ -154,6 +155,9 @@ def standardizeDict(d: dict):
   return {key: value if not isinstance(value, dict) else standardizeDict(value) for key, value in sorted(d.items())}
 
 if __name__ == '__main__':
+  logging.basicConfig(level=logging.INFO)
+  logger = logging.getLogger(__name__)
+
   importRouteListJson('kmb')
   importRouteListJson('ctb')
   importRouteListJson('nlb')
