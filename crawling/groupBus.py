@@ -1,7 +1,10 @@
 from scipy.spatial import KDTree
 import json
+import logging
 import math
 import polars as pl
+
+logger = logging.getLogger(__name__)
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     R = 6371000  # Earth radius in meters
@@ -27,13 +30,13 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     
     return (math.degrees(theta) + 360) % 360
 
-def group_bus_stops(bus_stops, max_distance=50, bearing_threshold=35):
+def group_bus_stops(bus_stops:pl.DataFrame, max_distance=50, bearing_threshold=35):
     tree = KDTree(bus_stops.select("lat", "lng"))
     groups = pl.DataFrame(schema={"id":str, "lat":pl.Float64, "lng":pl.Float64, "name_en":str, "name_zh":str, "bus_group_id":pl.Int32})
     visited = set()
     group_id = 1
 
-    print(len(bus_stops))
+    logger.info(f"Built KDTree for {len(bus_stops)} stops")
     
     for i in range(len(bus_stops)):
         if i in visited:
@@ -77,6 +80,8 @@ def group_bus_stops(bus_stops, max_distance=50, bearing_threshold=35):
     return groups
 
 if __name__ == '__main__': 
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
     with open("routeFareList.min.json", 'r', encoding='utf8') as f:
         r = json.load(f)
         r = r['stopList']
